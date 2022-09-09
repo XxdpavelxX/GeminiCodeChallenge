@@ -40,7 +40,12 @@ def mocked_requests_get(url): # pylint: disable=W0613
             Returns a mocked get response request.
             '''
             return self.json_data
-    return MockResponse({"key1": "value1", "key2": "value2", "key3": "value3"}, 200)
+
+    return MockResponse([{"key1": "value1", "key2": "value2", "key3": "value3"},
+        {"a_key1": "a_value1", "a_key2": "a_value2", "a_key3": "a_value3"},
+        {"b_key1": "b_value1", "b_key2": "b_value2", "b_key3": "b_value3"}]
+     , 200)
+
 
 class TestAPIAlerts(unittest.TestCase):
     '''
@@ -61,13 +66,12 @@ class TestAPIAlerts(unittest.TestCase):
         self.assertIn(' - AlertingTool - INFO - Would have called API and found'
                       ' price fluctations above: 0.1%.\n', result.output)
 
-    @mock.patch('api_alerts.log_price_alert')
+    @mock.patch('api_alerts.log_price_alert', return_value = "pass")
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_price_change_alert(self, mock_get, mock_log_price_alert): # pylint: disable=W0613,R0201
         '''
         Testing for price_change_alert function in api_alerts.py using mocked objects
         '''
-        mock_log_price_alert.return_value = "pass"
         runner = CliRunner()
         runner.invoke(price_change_alert, '-d .10'.split(), input='1')
         assert mock_log_price_alert.called is True
